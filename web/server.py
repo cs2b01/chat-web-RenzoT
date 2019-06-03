@@ -8,6 +8,11 @@ engine = db.createEngine()
 
 app = Flask(__name__)
 
+@app.route('/templates/login.html')
+def login():
+    return render_template('login.html')
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -78,6 +83,41 @@ def delete_user():
     session.commit()
     return 'Deleted User'
 
+#Messages
+@app.route('/messages', methods = ['POST'])
+def create_message():
+    c =  json.loads(request.form['values'])
+    message = entities.User(
+        content=c['content'],
+        sent_on=c['sent_on'],
+        user_from_id=c['user_from_id'],
+        user_to_id=c['user_to_id']
+    )
+    session = db.getSession(engine)
+    session.add(message)
+    session.commit()
+    return 'Created Message'
+
+@app.route('/messages', methods = ['GET'])
+def get_messages():
+    session = db.getSession(engine)
+    dbResponse = session.query(entities.User)
+    data = dbResponse[:]
+    return Response(json.dumps(data, cls=connector.AlchemyEncoder), mimetype='application/json')
+
+@app.route('/messages', methods = ['PUT'])
+def update_message():
+    session = db.getSession(engine)
+    id = request.form['key']
+    message = session.query(entities.User).filter(entities.User.id == id).first()
+    c =  json.loads(request.form['values'])
+    for key in c.keys():
+        setattr(message, key, c[key])
+    session.add(message)
+    session.commit()
+    return 'Updated Message'
+
+
 @app.route('/messages', methods = ['DELETE'])
 def delete_message():
     id = request.form['key']
@@ -87,6 +127,29 @@ def delete_message():
         session.delete(message)
     session.commit()
     return "Deleted Message"
+
+@app.route('/authenticate', methods = ['POST'])
+def authenticate():
+    #1 Get data from requesr
+    username = request.form['username']
+    password = request.form['password']
+
+    #2 look in database
+    db_session = db.getSession(engine)
+    try:
+        user = db_session.query(entities.User
+            ).filter(entities.User.username == username
+            ).filter(entities.User.password == password
+            ).one()
+        return render_template("success.html")
+    except Exception:
+        return render_template("fail.html")
+
+    #3 Anyone has the username and password requested?
+    ##for user in users:
+      ##  if user.username == username and user.password == password:
+        ##    return render_template("success.html")
+    ##return render_template("fail.html")
 
 if __name__ == '__main__':
     app.secret_key = ".."
