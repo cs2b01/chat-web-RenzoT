@@ -59,10 +59,10 @@ function whoami(){
                 var i = 0;
                 $.each(response, function(){
                 if(response[i]["user_from_id"]== user_to_id){
-                    f = '<div class="alert alert-secondary"  role="alert"  >';
+                    f = '<div class="d-flex justify-content-start mb-4"><div class="msg_cotainer">';
                 }
                 else {
-                    f = '<div class="alert alert-primary"  role="alert" align="right" >';
+                    f = '<div class="d-flex justify-content-end mb-4"><div class="msg_cotainer_send" align="right" >';
                 }
                     f = f + response[i].content;
                     f = f + '</div>';
